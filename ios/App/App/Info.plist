@@ -23,7 +23,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Zum Scannen von Barcodes benötigt die App Zugriff auf die Kamera.</string>
+	<string>The app enables the scanning of various barcodes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>The app needs access to your photo library to scan barcodes from images.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

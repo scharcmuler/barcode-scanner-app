@@ -69,12 +69,13 @@ import {
   IonButtons,
 } from '@ionic/vue';
 
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Preferences } from '@capacitor/preferences';
 import { Clipboard } from '@capacitor/clipboard';
 import { Share } from '@capacitor/share';
 import { Browser } from '@capacitor/browser';
 import { ref, onMounted } from 'vue';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 
 // Barcode-Daten
 const barcodes = ref<
@@ -132,8 +133,52 @@ async function scanBarcode() {
 }
 
 // Galerie öffnen (noch leer)
-function pickFromGallery() {
-  console.log('Galerie öffnen...');
+async function pickFromGallery() {
+  try {
+    const { files } = await FilePicker.pickImages();
+
+    if (!files || files.length === 0) {
+      console.log('Kein Bild ausgewählt');
+      return;
+    }
+
+    const selectedImage = files[0];
+
+    if (!selectedImage.path) {
+      console.error('Bildpfad ist nicht verfügbar');
+      return;
+    }
+
+    const { barcodes: detectedBarcodes } = await BarcodeScanner.readBarcodesFromImage({
+      path: selectedImage.path,
+      formats: [
+        BarcodeFormat.QrCode,
+        BarcodeFormat.Code128,
+        BarcodeFormat.Ean13,
+        BarcodeFormat.Ean8,
+        BarcodeFormat.UpcA,
+        BarcodeFormat.UpcE,
+      ],
+    });
+
+    if (detectedBarcodes.length === 0) {
+      console.log('Kein Barcode erkannt');
+      return;
+    }
+
+    for (const scanned of detectedBarcodes) {
+      const newBarcode = {
+        displayValue: scanned.displayValue ?? scanned.rawValue ?? 'Unbekannt',
+        format: scanned.format ?? 'UNKNOWN',
+        valueType: scanned.valueType ?? 'TEXT',
+      };
+      barcodes.value.unshift(newBarcode);
+    }
+
+    await saveBarcodes();
+  } catch (error) {
+    console.error('Fehler beim Lesen des Bildes:', error);
+  }
 }
 
 // Barcode teilen
