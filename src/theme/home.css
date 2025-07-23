@@ -1,0 +1,38 @@
+html,
+body,
+#app {
+  height: 100%;
+  background: transparent;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0%;
+    width: 100vw;
+    padding-bottom: 3vh;
+    display: flex;
+    justify-content: space-around;
+    background-color: #F7F7F7;
+    box-shadow: 0 -1px 5px rgba(76, 76, 76, 0.55);
+}
+
+.footer button{
+    width: 25vw;
+    background-color: transparent;
+}
+
+.footer button img {
+  width: 30px;
+  height: 30px;
+  margin-top: 10px;
+}
+
+.footer button p {
+  color: #BDBDBD;
+  margin: 5px;
+}
+
+.list-button p {
+  font-weight: bold;
+  color: #2253E0 !important;
+}
