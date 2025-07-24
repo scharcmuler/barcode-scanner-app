@@ -36,3 +36,30 @@ body,
   font-weight: bold;
   color: #2253E0 !important;
 }
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #888;
+  border-radius: 50%;
+  margin-right: 12px;
+  background-color: white;
+  position: relative;
+  cursor: pointer;
+}
+
+.custom-checkbox.selected {
+  background-color: #3880ff;
+  border-color: #3880ff;
+}
+
+.custom-checkbox.selected::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+}
