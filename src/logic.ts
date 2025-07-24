@@ -1,5 +1,5 @@
-import { ref} from 'vue';
-import { BarcodeScanner} from '@capacitor-mlkit/barcode-scanning';
+import { ref, computed, watch } from 'vue';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Preferences } from '@capacitor/preferences';
 import { Clipboard } from '@capacitor/clipboard';
 import { Share } from '@capacitor/share';
@@ -18,7 +18,8 @@ export const barcodes = ref<
 export const editMode = ref(false);
 export const selectedIndexes = ref<number[]>([]);
 export const expandedIndexes = ref<number[]>([]);
-export const showSortOptions = ref(false);
+export const showFilterAlert = ref(false);
+export const showDeleteConfirmAlert = ref(false);
 
 export async function loadBarcodes() {
   const result = await Preferences.get({ key: 'barcodes' });
@@ -157,14 +158,11 @@ export function selectAll() {
   }
 }
 
-export async function deleteSelected() {
-  if (selectedIndexes.value.length >= 2) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedIndexes.value.length} items?`
-    );
-    if (!confirmed) return;
-  }
+export function requestDeleteSelected() {
+  showDeleteConfirmAlert.value = true;
+}
 
+export async function confirmDeleteSelected() {
   selectedIndexes.value.sort((a, b) => b - a);
   for (const index of selectedIndexes.value) {
     await deleteBarcode(index);
@@ -172,6 +170,7 @@ export async function deleteSelected() {
 
   selectedIndexes.value = [];
   editMode.value = false;
+  showDeleteConfirmAlert.value = false;
 }
 
 export function toggleDetails(index: number) {
@@ -183,22 +182,41 @@ export function toggleDetails(index: number) {
   }
 }
 
-
 export function formatDate(iso: string) {
   const date = new Date(iso);
   return date.toLocaleString();
 }
 
-export function sortBarcodes(type: 'date' | 'value') {
-  if (type === 'date') {
-    barcodes.value.sort((a, b) => {
-      const timeA = new Date(a.scannedAt ?? 0).getTime();
-      const timeB = new Date(b.scannedAt ?? 0).getTime();
-      return timeB - timeA;
-    });
-  } else if (type === 'value') {
-    barcodes.value.sort((a, b) =>
-      (a.displayValue ?? '').localeCompare(b.displayValue ?? '')
-    );
+export const activeValueTypes = computed(() => {
+  const types = new Set<string>();
+  barcodes.value.forEach(b => {
+    if (b.valueType) types.add(b.valueType);
+  });
+  return Array.from(types);
+});
+
+export const selectedValueTypes = ref<string[]>([]);
+
+// Watcher für dynamisches Handling der Filter-Auswahl
+watch(activeValueTypes, (newTypes) => {
+  if (selectedValueTypes.value.length === 0) {
+    // Standardmäßig alle neuen Typen auswählen
+    selectedValueTypes.value = [...newTypes];
+  } else {
+    // Neue Typen hinzufügen, ohne bereits abgewählte zu überschreiben
+    const addedTypes = newTypes.filter(t => !selectedValueTypes.value.includes(t));
+    if (addedTypes.length) {
+      selectedValueTypes.value.push(...addedTypes);
+    }
   }
-}
+});
+
+// Gefilterte Liste basierend auf ausgewählten Typen
+export const filteredBarcodes = computed(() => {
+  if (selectedValueTypes.value.length === 0) {
+    return [];
+  }
+  return barcodes.value.filter(b =>
+    selectedValueTypes.value.includes(b.valueType)
+  );
+});

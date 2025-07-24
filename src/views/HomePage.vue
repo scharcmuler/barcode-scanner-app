@@ -2,10 +2,9 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <!-- Sort Button (links) -->
         <ion-buttons slot="start">
-          <ion-button @click="showSortOptions = true">
-            Sort
+          <ion-button @click="showFilterAlert = true">
+            Filter
           </ion-button>
         </ion-buttons>
 
@@ -22,8 +21,8 @@
 
     <ion-content>
       <!-- Barcode Liste -->
-      <ion-list v-if="barcodes.length > 0">
-        <ion-item-sliding v-for="(barcode, index) in barcodes" :key="index" :disabled="editMode">
+      <ion-list v-if="filteredBarcodes.length > 0">
+        <ion-item-sliding v-for="(barcode, index) in filteredBarcodes" :key="index" :disabled="editMode">
           <!-- Slide‑Option links (start) -->
           <ion-item-options side="start">
             <ion-item-option color="danger" expandable @click="deleteBarcode(index)">
@@ -85,7 +84,7 @@
       <!-- Auswahlleiste im Bearbeitungsmodus -->
       <div v-if="editMode" class="edit-toolbar">
         <ion-button @click="selectAll">Alle auswählen</ion-button>
-        <ion-button color="danger" @click="deleteSelected" :disabled="selectedIndexes.length === 0">
+        <ion-button color="danger" @click="requestDeleteSelected" :disabled="selectedIndexes.length === 0">
           Ausgewählte löschen ({{ selectedIndexes.length }})
         </ion-button>
       </div>
@@ -105,22 +104,48 @@
           <p>Gallery</p>
         </button>
       </div>
-
-      <!-- Sortier-Optionen Alert -->
-      <ion-alert :is-open="showSortOptions" header="Sort by" @didDismiss="showSortOptions = false" :buttons="[
-        {
-          text: 'Date',
-          handler: () => sortBarcodes('date'),
-        },
-        {
-          text: 'Value',
-          handler: () => sortBarcodes('value'),
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        }
-      ]" />
+      <ion-alert
+        :is-open="showFilterAlert"
+        header="Filter by type"
+        :inputs="activeValueTypes.map(type => ({
+          type: 'checkbox',
+          label: type,
+          value: type,
+          checked: selectedValueTypes.includes(type),
+        }))"
+        :buttons="[
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Apply',
+            handler: (data) => {
+              selectedValueTypes.splice(0, selectedValueTypes.length, ...data);
+            },
+          },
+        ]"
+        @didDismiss="showFilterAlert = false"
+      />
+      <ion-alert
+        :is-open="showDeleteConfirmAlert"
+        header="Löschen bestätigen"
+        :message="`Are you sure you want to delete ${selectedIndexes.length} item${selectedIndexes.length === 1 ? '' : 's'}?`"
+        :buttons="[
+          {
+            text: 'Abbrechen',
+            role: 'cancel',
+            handler: () => {
+              showDeleteConfirmAlert = false;
+            }
+          },
+          {
+            text: 'Löschen',
+            role: 'destructive',
+            handler: confirmDeleteSelected
+          }
+        ]"
+      />
     </ion-content>
   </ion-page>
 </template>
@@ -153,6 +178,7 @@ import {
 import {
   barcodes,
   loadBarcodes,
+  filteredBarcodes,
   scanBarcode,
   pickFromGallery,
   copyToClipboard,
@@ -162,14 +188,17 @@ import {
   expandedIndexes,
   selectedIndexes,
   editMode,
-  showSortOptions,
   toggleEditMode,
   toggleSelection,
   selectAll,
-  deleteSelected,
   toggleDetails,
   formatDate,
-  sortBarcodes,
+  activeValueTypes,
+  selectedValueTypes,
+  showFilterAlert,
+  showDeleteConfirmAlert,
+  requestDeleteSelected,
+  confirmDeleteSelected,
 } from '../logic';
 
 onMounted(() => {
