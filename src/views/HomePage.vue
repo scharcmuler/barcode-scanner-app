@@ -23,55 +23,61 @@
     <ion-content>
       <!-- Barcode Liste -->
       <ion-list v-if="barcodes.length > 0">
-        <ion-item
-          v-for="(barcode, index) in barcodes"
-          :key="index"
-          button
-          @click="!editMode && handleBarcodeClick(barcode)"
-        >
-          <!-- Auswahl-Knopf (links) -->
-          <div
-            v-if="editMode"
-            class="custom-checkbox"
-            :class="{ selected: selectedIndexes.includes(index) }"
-            @click.stop="toggleSelection(index)"
-            slot="start"
-          ></div>
+        <ion-item-sliding v-for="(barcode, index) in barcodes" :key="index">
+          <!-- Slide‑Option links (start) -->
+          <ion-item-options side="start">
+            <ion-item-option color="danger" expandable @click="deleteBarcode(index)">
+              🗑️ Löschen
+            </ion-item-option>
+          </ion-item-options>
 
-          <!-- Display-Wert + Info-Bereich -->
-          <ion-label>
-            <h2>{{ barcode.displayValue }}</h2>
-            <p v-if="barcode.scannedAt">{{ formatDate(barcode.scannedAt) }}</p>
+          <!-- Haupt‑Item -->
+          <ion-item button @click="!editMode && handleBarcodeClick(barcode)">
+            <!-- Checkbox im Bearbeitungsmodus -->
+            <div v-if="editMode" class="custom-checkbox" :class="{ selected: selectedIndexes.includes(index) }"
+              @click.stop="toggleSelection(index)" slot="start"></div>
 
-            <div v-if="expandedIndexes.includes(index)" class="barcode-details">
-              <p>Format: {{ barcode.format }}</p>
-              <p>Type: {{ barcode.valueType }}</p>
-            </div>
-          </ion-label>
+            <ion-label>
+              <h2>{{ barcode.displayValue }}</h2>
+              <p v-if="barcode.scannedAt">{{ formatDate(barcode.scannedAt) }}</p>
 
-          <!-- Aktionen (nur bei editMode false) -->
-          <ion-buttons slot="end" v-if="!editMode">
-            <ion-button fill="clear" @click.stop="toggleDetails(index)">
-              ℹ️
-            </ion-button>
-            <ion-button fill="clear" @click.stop="copyToClipboard(barcode.displayValue)">
-              📋
-            </ion-button>
-            <ion-button fill="clear" @click.stop="shareBarcode(barcode.displayValue)">
-              🔗
-            </ion-button>
-            <ion-button fill="clear" color="danger" @click.stop="deleteBarcode(index)">
-              🗑️
-            </ion-button>
-          </ion-buttons>
-        </ion-item>
+              <div v-if="expandedIndexes.includes(index)" class="barcode-details">
+                <p>Format: {{ barcode.format }}</p>
+                <p>Type: {{ barcode.valueType }}</p>
+              </div>
+            </ion-label>
+
+            <!-- Info‑Button bleibt -->
+            <ion-buttons slot="end" v-if="!editMode">
+              <ion-button fill="clear" @click.stop="toggleDetails(index)">
+                ℹ️
+              </ion-button>
+            </ion-buttons>
+          </ion-item>
+
+          <!-- Slide‑Optionen rechts (end) -->
+          <ion-item-options side="end">
+            <ion-item-option expandable @click="copyToClipboard(barcode.displayValue)">
+              📋 Kopieren
+            </ion-item-option>
+            <ion-item-option expandable @click="shareBarcode(barcode.displayValue)">
+              🔗 Teilen
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
       </ion-list>
 
-      <!-- Kein Barcode vorhanden -->
-      <ion-text v-else class="ion-padding">
-        Noch keine Barcodes gescannt.
-      </ion-text>
 
+      <!-- Kein Barcode vorhanden -->
+      <ion-grid v-else class="h-100 ion-justify-content-center ion-align-items-center">
+        <ion-row>
+          <ion-col size="12" class="ion-text-center">
+            <ion-text color="medium" class="fw-semibold">
+              Keine Einträge vorhanden.
+            </ion-text>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
       <!-- Auswahlleiste im Bearbeitungsmodus -->
       <div v-if="editMode" class="edit-toolbar">
         <ion-button @click="selectAll">Alle auswählen</ion-button>
@@ -97,25 +103,20 @@
       </div>
 
       <!-- Sortier-Optionen Alert -->
-      <ion-alert
-        :is-open="showSortOptions"
-        header="Sort by"
-        @didDismiss="showSortOptions = false"
-        :buttons="[
-          {
-            text: 'Date',
-            handler: () => sortBarcodes('date'),
-          },
-          {
-            text: 'Value',
-            handler: () => sortBarcodes('value'),
-          },
-          {
-            text: 'Cancel',
-            role: 'cancel'
-          }
-        ]"
-      />
+      <ion-alert :is-open="showSortOptions" header="Sort by" @didDismiss="showSortOptions = false" :buttons="[
+        {
+          text: 'Date',
+          handler: () => sortBarcodes('date'),
+        },
+        {
+          text: 'Value',
+          handler: () => sortBarcodes('value'),
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]" />
     </ion-content>
   </ion-page>
 </template>
@@ -129,9 +130,11 @@ import {
   IonContent,
   IonList,
   IonItem,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
   IonLabel,
   IonButton,
-  IonFooter,
   IonText,
   IonButtons,
   IonAlert,
