@@ -89,7 +89,7 @@
       <!-- Footer -->
       <div class="footer">
         <button class="scanner-button" @click="scanBarcode">
-          <img src="../assets/scanner.png" alt="Scanner" />
+          <IonIcon :icon="logoIonic" size="large" color="medium" />
           <p>Scanner</p>
         </button>
         <button class="list-button">
@@ -138,7 +138,12 @@ import {
   IonText,
   IonButtons,
   IonAlert,
+  IonIcon,
 } from '@ionic/vue';
+
+  import { logoIonic } from 'ionicons/icons';
+  import { defineComponent } from 'vue';
+
 
 import {
   barcodes,
