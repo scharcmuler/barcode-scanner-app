@@ -1,5 +1,5 @@
-import { ref, onMounted } from 'vue';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { ref} from 'vue';
+import { BarcodeScanner} from '@capacitor-mlkit/barcode-scanning';
 import { Preferences } from '@capacitor/preferences';
 import { Clipboard } from '@capacitor/clipboard';
 import { Share } from '@capacitor/share';
@@ -20,12 +20,12 @@ export const selectedIndexes = ref<number[]>([]);
 export const expandedIndexes = ref<number[]>([]);
 export const showSortOptions = ref(false);
 
-onMounted(async () => {
+export async function loadBarcodes() {
   const result = await Preferences.get({ key: 'barcodes' });
   if (result.value) {
     barcodes.value = JSON.parse(result.value);
   }
-});
+}
 
 export async function saveBarcodes() {
   await Preferences.set({

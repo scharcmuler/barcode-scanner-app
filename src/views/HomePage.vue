@@ -23,7 +23,7 @@
     <ion-content>
       <!-- Barcode Liste -->
       <ion-list v-if="barcodes.length > 0">
-        <ion-item-sliding v-for="(barcode, index) in barcodes" :key="index">
+        <ion-item-sliding v-for="(barcode, index) in barcodes" :key="index" :disabled="editMode">
           <!-- Slide‑Option links (start) -->
           <ion-item-options side="start">
             <ion-item-option color="danger" expandable @click="deleteBarcode(index)">
@@ -32,10 +32,14 @@
           </ion-item-options>
 
           <!-- Haupt‑Item -->
-          <ion-item button @click="!editMode && handleBarcodeClick(barcode)">
+          <ion-item button @click="editMode ? toggleSelection(index) : handleBarcodeClick(barcode)">
             <!-- Checkbox im Bearbeitungsmodus -->
-            <div v-if="editMode" class="custom-checkbox" :class="{ selected: selectedIndexes.includes(index) }"
-              @click.stop="toggleSelection(index)" slot="start"></div>
+            <ion-checkbox
+              v-if="editMode"
+              slot="start"
+              :checked="selectedIndexes.includes(index)"
+              @click.stop
+            ></ion-checkbox>
 
             <ion-label>
               <h2>{{ barcode.displayValue }}</h2>
@@ -139,14 +143,16 @@ import {
   IonButtons,
   IonAlert,
   IonIcon,
+  IonCheckbox,
 } from '@ionic/vue';
 
   import { logoIonic } from 'ionicons/icons';
-  import { defineComponent } from 'vue';
+  import { defineComponent, onMounted } from 'vue';
 
 
 import {
   barcodes,
+  loadBarcodes,
   scanBarcode,
   pickFromGallery,
   copyToClipboard,
@@ -165,6 +171,11 @@ import {
   formatDate,
   sortBarcodes,
 } from '../logic';
+
+onMounted(() => {
+  loadBarcodes();
+});
+
 </script>
 
 <style scoped src="../theme/home.css"></style>
