@@ -31,7 +31,13 @@
           <!-- Haupt‑Item -->
           <ion-item button @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)">
             <!-- Checkbox im Bearbeitungsmodus -->
-            <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)" @click.stop />
+            <ion-checkbox
+              v-if="editMode"
+              slot="start"
+              :checked="selectedIds.includes(barcode.id)"
+              @click.stop
+              @ionChange="toggleSelection(barcode.id)"
+            ></ion-checkbox>
 
             <ion-label class="ion-text-wrap">
               <div style="display: flex; flex-direction: column;">
