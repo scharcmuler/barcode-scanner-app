@@ -24,7 +24,7 @@
           <!-- Slide‑Option links -->
           <ion-item-options side="start">
             <ion-item-option color="danger" expandable @click="deleteBarcode(barcode.id)">
-              <ion-icon name="trash-outline" />
+              <ion-icon name="trash-outline" class="option-icon"/>
             </ion-item-option>
           </ion-item-options>
 
@@ -49,11 +49,11 @@
 
           <!-- Slide‑Optionen rechts -->
           <ion-item-options side="end">
-            <ion-item-option expandable @click="copyToClipboard(barcode.displayValue)">
-              <ion-icon name="copy-outline" />
+            <ion-item-option color="success" @click="copyToClipboard(barcode.displayValue)">
+              <ion-icon name="copy-outline" class="option-icon"/>
             </ion-item-option>
-            <ion-item-option expandable @click="shareBarcode(barcode.displayValue)">
-              <ion-icon name="share-outline" />
+            <ion-item-option color="tertiary" @click="shareBarcode(barcode.displayValue)">
+              <ion-icon name="share-outline" class="option-icon"/>
             </ion-item-option>
           </ion-item-options>
         </ion-item-sliding>
@@ -100,7 +100,7 @@
           <ion-label class="active">List</ion-label>
         </div>
         <div class="footer-entry" @click="pickFromGallery">
-          <ion-icon name="images-outline" />
+          <ion-icon name="image-outline" />
           <ion-label>Gallery</ion-label>
         </div>
       </div>
@@ -115,13 +115,13 @@ import {
 } from '@ionic/vue';
 import { addIcons } from 'ionicons';
 import {
-  barcodeOutline, listOutline, imagesOutline, trashOutline,
+  barcodeOutline, listOutline, imageOutline, trashOutline,
   informationCircleOutline, copyOutline, shareOutline, closeCircleOutline,
 } from 'ionicons/icons';
 addIcons({
   'barcode-outline': barcodeOutline,
   'list-outline': listOutline,
-  'images-outline': imagesOutline,
+  'image-outline': imageOutline,
   'trash-outline': trashOutline,
   'information-circle-outline': informationCircleOutline,
   'copy-outline': copyOutline,
@@ -132,8 +132,8 @@ addIcons({
 import { onMounted } from 'vue';
 import {
   loadBarcodes, filteredBarcodes, scanBarcode, pickFromGallery,
-  copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick,
-  expandedIds, selectedIds, editMode, toggleEditMode, toggleSelection,
+  copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick, 
+  selectedIds, editMode, toggleEditMode, toggleSelection,
   selectAll, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
   showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected,
 } from '../logic';
