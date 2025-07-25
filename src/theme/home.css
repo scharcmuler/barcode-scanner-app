@@ -32,10 +32,6 @@ ion-icon {
   color: var(--ion-color-medium-tint);
 }
 
-.option-icon {
-  color: var(--ion-color-light) !important;
-}
-
 .footer{
   display: flex;
   justify-content: space-around;
@@ -57,4 +53,8 @@ ion-icon {
 .active {
   color: var(--ion-color-primary) !important;
   font-weight: 500;
+}
+
+.option-icon {
+  color: var(--ion-color-light);
 }

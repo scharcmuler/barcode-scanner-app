@@ -31,12 +31,19 @@
           <!-- Haupt‑Item -->
           <ion-item button @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)">
             <!-- Checkbox im Bearbeitungsmodus -->
-            <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)"
-              @ionChange="toggleSelection(barcode.id)" />
+            <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)" @click.stop />
 
-            <ion-label>
-              <h2>{{ barcode.displayValue }}</h2>
-              <p v-if="barcode.scannedAt">{{ formatDate(barcode.scannedAt) }}</p>
+            <ion-label class="ion-text-wrap">
+              <div style="display: flex; flex-direction: column;">
+                <h2>{{ barcode.displayValue }}</h2>
+                <p v-if="barcode.scannedAt" style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">
+                  {{ formatDate(barcode.scannedAt) }}
+                </p>
+                <div v-if="expandedIds.includes(barcode.id)" style="margin-top: 6px;">
+                  <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Format: {{ barcode.format }}</p>
+                  <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Type: {{ barcode.valueType }}</p>
+                </div>
+              </div>
             </ion-label>
 
             <!-- Info‑Button -->
@@ -50,7 +57,7 @@
           <!-- Slide‑Optionen rechts -->
           <ion-item-options side="end">
             <ion-item-option color="success" @click="copyToClipboard(barcode.displayValue)">
-              <ion-icon name="copy-outline" class="option-icon"/>
+              <ion-icon name="copy-outline" class="option-icon" />
             </ion-item-option>
             <ion-item-option color="tertiary" @click="shareBarcode(barcode.displayValue)">
               <ion-icon name="share-outline" class="option-icon"/>
@@ -65,7 +72,6 @@
         <ion-label>No codes scanned.</ion-label>
       </div>
 
-      <!-- Toolbar im Edit‑Modus -->
       <div v-if="editMode" class="edit-toolbar">
         <ion-button @click="selectAll">Select all</ion-button>
         <ion-button color="danger" :disabled="selectedIds.length === 0" @click="requestDeleteSelected">
@@ -132,9 +138,9 @@ addIcons({
 import { onMounted } from 'vue';
 import {
   loadBarcodes, filteredBarcodes, scanBarcode, pickFromGallery,
-  copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick, 
+  copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick,
   selectedIds, editMode, toggleEditMode, toggleSelection,
-  selectAll, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
+  selectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
   showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected,
 } from '../logic';
 
