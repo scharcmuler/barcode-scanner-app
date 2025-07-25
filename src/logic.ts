@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Preferences } from '@capacitor/preferences';
 import { Clipboard } from '@capacitor/clipboard';
@@ -6,217 +6,112 @@ import { Share } from '@capacitor/share';
 import { Browser } from '@capacitor/browser';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
-export const barcodes = ref<
-  {
-    displayValue: string;
-    format: string;
-    valueType: string;
-    scannedAt?: string;
-  }[]
->([]);
+interface BarcodeEntry {
+  id: string;
+  displayValue: string;
+  format: string;
+  valueType: string;
+  scannedAt?: string;
+}
 
+export const barcodes = ref<BarcodeEntry[]>([]);
 export const editMode = ref(false);
-export const selectedIndexes = ref<number[]>([]);
-export const expandedIndexes = ref<number[]>([]);
+export const selectedIds = ref<string[]>([]);
+export const expandedIds = ref<string[]>([]);
 export const showFilterAlert = ref(false);
 export const showDeleteConfirmAlert = ref(false);
 
+/* ---------------- persistence ---------------- */
+const STORAGE_KEY = 'barcodes';
 export async function loadBarcodes() {
-  const result = await Preferences.get({ key: 'barcodes' });
-  if (result.value) {
-    barcodes.value = JSON.parse(result.value);
-  }
+  const { value } = await Preferences.get({ key: STORAGE_KEY });
+  if (value) barcodes.value = JSON.parse(value);
+}
+async function saveBarcodes() {
+  await Preferences.set({ key: STORAGE_KEY, value: JSON.stringify(barcodes.value) });
 }
 
-export async function saveBarcodes() {
-  await Preferences.set({
-    key: 'barcodes',
-    value: JSON.stringify(barcodes.value),
-  });
+/* ---------------- barcode creation helpers ---------------- */
+function createEntry(scanned: any): BarcodeEntry {
+  return {
+    id: crypto.randomUUID(),
+    displayValue: scanned.displayValue ?? scanned.rawValue ?? 'Unknown',
+    format: scanned.format ?? 'UNKNOWN',
+    valueType: scanned.valueType ?? 'TEXT',
+    scannedAt: new Date().toISOString(),
+  };
 }
 
+/* ---------------- scanning ---------------- */
 export async function scanBarcode() {
   try {
     const { camera } = await BarcodeScanner.requestPermissions();
-    if (!camera) {
-      console.warn('Kamera-Berechtigung nicht erteilt');
-      return;
-    }
-
-    const { barcodes: scannedBarcodes } = await BarcodeScanner.scan({
-      formats: [], // alle Formate
-    });
-
-    if (scannedBarcodes.length > 0) {
-      const scanned = scannedBarcodes[0];
-      const newBarcode = {
-        displayValue: scanned.displayValue ?? scanned.rawValue ?? 'Unbekannt',
-        format: scanned.format ?? 'UNKNOWN',
-        valueType: scanned.valueType ?? 'TEXT',
-        scannedAt: new Date().toISOString(),
-      };
-      barcodes.value.unshift(newBarcode);
+    if (!camera) return;
+    const { barcodes: result } = await BarcodeScanner.scan({ formats: [] });
+    if (result.length) {
+      barcodes.value.unshift(createEntry(result[0]));
       await saveBarcodes();
-    } else {
-      console.log('Kein Barcode erkannt');
     }
-  } catch (error) {
-    console.error('Scan fehlgeschlagen:', error);
-  }
+  } catch (e) { console.error(e); }
 }
 
 export async function pickFromGallery() {
   try {
     const { files } = await FilePicker.pickImages();
-    if (!files || files.length === 0 || !files[0].path) {
-      console.log('Kein Bild ausgewählt oder Pfad ungültig');
-      return;
-    }
-
-    const { barcodes: detectedBarcodes } = await BarcodeScanner.readBarcodesFromImage({
-      path: files[0].path,
-      formats: [],
-    });
-
-    if (detectedBarcodes.length === 0) {
-      console.log('Kein Barcode erkannt');
-      return;
-    }
-
-    for (const scanned of detectedBarcodes) {
-      const newBarcode = {
-        displayValue: scanned.displayValue ?? scanned.rawValue ?? 'Unbekannt',
-        format: scanned.format ?? 'UNKNOWN',
-        valueType: scanned.valueType ?? 'TEXT',
-        scannedAt: new Date().toISOString(),
-      };
-      barcodes.value.unshift(newBarcode);
-    }
-
+    if (!files?.[0]?.path) return;
+    const { barcodes: detected } = await BarcodeScanner.readBarcodesFromImage({ path: files[0].path, formats: [] });
+    detected.forEach(b => barcodes.value.unshift(createEntry(b)));
     await saveBarcodes();
-  } catch (error) {
-    console.error('Fehler beim Lesen des Bildes:', error);
-  }
+  } catch (e) { console.error(e); }
 }
 
-export async function shareBarcode(text: string) {
-  try {
-    await Share.share({
-      title: 'Barcode teilen',
-      text,
-    });
-  } catch (err) {
-    console.error('Teilen fehlgeschlagen:', err);
-  }
+/* ---------------- util actions ---------------- */
+export const copyToClipboard = (text: string) => Clipboard.write({ string: text });
+export const shareBarcode   = (text: string) => Share.share({ title: 'Barcode', text });
+
+export function deleteBarcode(id: string) {
+  const idx = barcodes.value.findIndex(b => b.id === id);
+  if (idx !== -1) barcodes.value.splice(idx, 1);
+  saveBarcodes();
 }
 
-export async function copyToClipboard(text: string) {
-  await Clipboard.write({ string: text });
-  console.log('In Zwischenablage kopiert:', text);
+export function handleBarcodeClick(entry: BarcodeEntry) {
+  if (entry.valueType === 'URL' && entry.displayValue.startsWith('http')) Browser.open({ url: entry.displayValue });
+  else if (entry.valueType === 'PHONE') window.open(`tel:${entry.displayValue}`, '_system');
 }
 
-export async function deleteBarcode(index: number) {
-  barcodes.value.splice(index, 1);
-  await saveBarcodes();
+/* ---------------- edit‑mode helpers ---------------- */
+export const toggleEditMode = () => { editMode.value = !editMode.value; selectedIds.value = []; };
+export function toggleSelection(id: string) {
+  const i = selectedIds.value.indexOf(id);
+  i > -1 ? selectedIds.value.splice(i, 1) : selectedIds.value.push(id);
 }
-
-export function handleBarcodeClick(barcode: { displayValue: string; valueType: string }) {
-  const value = barcode.displayValue;
-
-  if (barcode.valueType === 'URL') {
-    if (!value.startsWith('http')) {
-      console.warn('Ungültige URL:', value);
-      return;
-    }
-    Browser.open({ url: value });
-  } else if (barcode.valueType === 'PHONE') {
-    window.open(`tel:${value}`, '_system');
-  } else {
-    console.log('Nicht klickbarer Typ:', barcode.valueType);
-  }
-}
-
-export function toggleEditMode() {
-  editMode.value = !editMode.value;
-  selectedIndexes.value = [];
-}
-
-export function toggleSelection(index: number) {
-  const pos = selectedIndexes.value.indexOf(index);
-  if (pos > -1) {
-    selectedIndexes.value.splice(pos, 1);
-  } else {
-    selectedIndexes.value.push(index);
-  }
-}
-
-export function selectAll() {
-  if (selectedIndexes.value.length === barcodes.value.length) {
-    selectedIndexes.value = [];
-  } else {
-    selectedIndexes.value = barcodes.value.map((_, index) => index);
-  }
-}
-
-export function requestDeleteSelected() {
-  showDeleteConfirmAlert.value = true;
-}
-
+export const selectAll = () => {
+  selectedIds.value.length === barcodes.value.length
+    ? (selectedIds.value = [])
+    : (selectedIds.value = barcodes.value.map(b => b.id));
+};
+export const requestDeleteSelected = () => (showDeleteConfirmAlert.value = true);
 export async function confirmDeleteSelected() {
-  selectedIndexes.value.sort((a, b) => b - a);
-  for (const index of selectedIndexes.value) {
-    await deleteBarcode(index);
-  }
-
-  selectedIndexes.value = [];
-  editMode.value = false;
-  showDeleteConfirmAlert.value = false;
+  for (const id of [...selectedIds.value]) deleteBarcode(id);
+  selectedIds.value = []; editMode.value = false; showDeleteConfirmAlert.value = false;
+}
+export function toggleDetails(id: string) {
+  const i = expandedIds.value.indexOf(id);
+  i > -1 ? expandedIds.value.splice(i, 1) : expandedIds.value.push(id);
 }
 
-export function toggleDetails(index: number) {
-  const pos = expandedIndexes.value.indexOf(index);
-  if (pos > -1) {
-    expandedIndexes.value.splice(pos, 1);
-  } else {
-    expandedIndexes.value.push(index);
-  }
-}
+export const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 
-export function formatDate(iso: string) {
-  const date = new Date(iso);
-  return date.toLocaleString();
-}
-
-export const activeValueTypes = computed(() => {
-  const types = new Set<string>();
-  barcodes.value.forEach(b => {
-    if (b.valueType) types.add(b.valueType);
-  });
-  return Array.from(types);
-});
-
+/* ---------------- filtering ---------------- */
+export const activeValueTypes = computed(() => Array.from(new Set(barcodes.value.map(b => b.valueType))));
 export const selectedValueTypes = ref<string[]>([]);
-
-// Watcher für dynamisches Handling der Filter-Auswahl
-watch(activeValueTypes, (newTypes) => {
-  if (selectedValueTypes.value.length === 0) {
-    // Standardmäßig alle neuen Typen auswählen
-    selectedValueTypes.value = [...newTypes];
-  } else {
-    // Neue Typen hinzufügen, ohne bereits abgewählte zu überschreiben
-    const addedTypes = newTypes.filter(t => !selectedValueTypes.value.includes(t));
-    if (addedTypes.length) {
-      selectedValueTypes.value.push(...addedTypes);
-    }
-  }
+watch(activeValueTypes, types => {
+  if (!selectedValueTypes.value.length) selectedValueTypes.value = [...types];
+  else types.forEach(t => { if (!selectedValueTypes.value.includes(t)) selectedValueTypes.value.push(t); });
 });
-
-// Gefilterte Liste basierend auf ausgewählten Typen
-export const filteredBarcodes = computed(() => {
-  if (selectedValueTypes.value.length === 0) {
-    return [];
-  }
-  return barcodes.value.filter(b =>
-    selectedValueTypes.value.includes(b.valueType)
-  );
-});
+export const filteredBarcodes = computed(() =>
+  selectedValueTypes.value.length
+    ? barcodes.value.filter(b => selectedValueTypes.value.includes(b.valueType))
+    : []
+);
