@@ -66,6 +66,12 @@
         </ion-item-sliding>
       </ion-list>
 
+      <!-- Kein Barcode vorhanden -->
+      <div v-else class="no-entry">
+        <ion-icon name="close-circle-outline"></ion-icon>
+        <ion-label>No codes scanned.</ion-label>
+      </div>
+
 
       
      
@@ -76,11 +82,7 @@
           Delete ({{ selectedIndexes.length }})
         </ion-button>
       </div>
-      <!-- Kein Barcode vorhanden -->
-      <div v-else class="no-entry">
-        <ion-icon name="close-circle-outline"></ion-icon>
-        <ion-label>No codes scanned.</ion-label>
-      </div>
+      
 
 
 
