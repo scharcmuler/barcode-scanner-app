@@ -3,8 +3,11 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start" v-if="filteredBarcodes.length > 0">
-          <ion-button @click="showFilterAlert = true">Filter</ion-button>
+        <ion-buttons slot="start">
+          <ion-button @click="showFilterAlert = true" v-if="filteredBarcodes.length > 0">
+            <ion-label style="margin-right: 5px;">Filter</ion-label>
+            <ion-badge v-if="filterActive" color="danger" slot="end" style="font-size: 10px;">1</ion-badge>
+          </ion-button>
         </ion-buttons>
 
         <ion-title class="ion-text-center">ScanManager</ion-title>
@@ -29,7 +32,8 @@
           </ion-item-options>
 
           <!-- Haupt‑Item -->
-          <ion-item button :detail="false" @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)" >
+          <ion-item button :detail="false"
+            @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)">
             <!-- Checkbox im Bearbeitungsmodus -->
             <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)" @click.stop
               @ionChange="toggleSelection(barcode.id)"></ion-checkbox>
@@ -99,6 +103,10 @@
           { text: 'Cancel', role: 'cancel', handler: () => (showDeleteConfirmAlert = false) },
           { text: 'Delete', role: 'destructive', handler: confirmDeleteSelected }
         ]" />
+
+      <ion-alert :is-open="showFilterResetAlert" header="Filter reset"
+        message="All codes are now shown because the last filtered entries were deleted." :buttons="['OK']"
+        @didDismiss="showFilterResetAlert = false" />
     </ion-content>
 
     <!-- Footer‑Buttons -->
@@ -124,7 +132,7 @@
 <script setup lang="ts">
 import {
   IonPage, IonHeader, IonToolbar, IonContent, IonList, IonItem, IonItemSliding, IonItemOptions,
-  IonItemOption, IonLabel, IonButton, IonButtons, IonAlert, IonIcon, IonCheckbox,
+  IonItemOption, IonLabel, IonButton, IonButtons, IonAlert, IonIcon, IonCheckbox, IonBadge,
 } from '@ionic/vue';
 import { addIcons } from 'ionicons';
 import {
@@ -148,7 +156,7 @@ import {
   copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick,
   selectedIds, editMode, toggleEditMode, toggleSelection,
   allSelected, toggleSelectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
-  showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected,
+  showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected, filterActive, showFilterResetAlert,
 } from '../logic';
 
 onMounted(loadBarcodes);
