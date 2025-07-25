@@ -29,7 +29,7 @@
           </ion-item-options>
 
           <!-- Haupt‑Item -->
-          <ion-item button @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)">
+          <ion-item button :detail="false" @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)" >
             <!-- Checkbox im Bearbeitungsmodus -->
             <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)" @click.stop
               @ionChange="toggleSelection(barcode.id)"></ion-checkbox>
