@@ -86,11 +86,17 @@ export function toggleSelection(id: string) {
   const i = selectedIds.value.indexOf(id);
   i > -1 ? selectedIds.value.splice(i, 1) : selectedIds.value.push(id);
 }
-export const selectAll = () => {
-  selectedIds.value.length === barcodes.value.length
+
+export const allSelected = computed(
+  () => barcodes.value.length > 0 && selectedIds.value.length === barcodes.value.length
+);
+
+export function toggleSelectAll() {
+  allSelected.value
     ? (selectedIds.value = [])
     : (selectedIds.value = barcodes.value.map(b => b.id));
-};
+}
+
 export const requestDeleteSelected = () => (showDeleteConfirmAlert.value = true);
 export async function confirmDeleteSelected() {
   for (const id of [...selectedIds.value]) deleteBarcode(id);

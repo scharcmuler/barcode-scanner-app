@@ -24,20 +24,15 @@
           <!-- Slide‑Option links -->
           <ion-item-options side="start">
             <ion-item-option color="danger" expandable @click="deleteBarcode(barcode.id)">
-              <ion-icon name="trash-outline" class="option-icon"/>
+              <ion-icon name="trash-outline" class="option-icon" />
             </ion-item-option>
           </ion-item-options>
 
           <!-- Haupt‑Item -->
           <ion-item button @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)">
             <!-- Checkbox im Bearbeitungsmodus -->
-            <ion-checkbox
-              v-if="editMode"
-              slot="start"
-              :checked="selectedIds.includes(barcode.id)"
-              @click.stop
-              @ionChange="toggleSelection(barcode.id)"
-            ></ion-checkbox>
+            <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)" @click.stop
+              @ionChange="toggleSelection(barcode.id)"></ion-checkbox>
 
             <ion-label class="ion-text-wrap">
               <div style="display: flex; flex-direction: column;">
@@ -46,8 +41,10 @@
                   {{ formatDate(barcode.scannedAt) }}
                 </p>
                 <div v-if="expandedIds.includes(barcode.id)" style="margin-top: 6px;">
-                  <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Format: {{ barcode.format }}</p>
-                  <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Type: {{ barcode.valueType }}</p>
+                  <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Format: {{ barcode.format
+                    }}</p>
+                  <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Type: {{
+                    barcode.valueType }}</p>
                 </div>
               </div>
             </ion-label>
@@ -66,7 +63,7 @@
               <ion-icon name="copy-outline" class="option-icon" />
             </ion-item-option>
             <ion-item-option color="tertiary" @click="shareBarcode(barcode.displayValue)">
-              <ion-icon name="share-outline" class="option-icon"/>
+              <ion-icon name="share-outline" class="option-icon" />
             </ion-item-option>
           </ion-item-options>
         </ion-item-sliding>
@@ -79,7 +76,10 @@
       </div>
 
       <div v-if="editMode" class="edit-toolbar">
-        <ion-button @click="selectAll">Select all</ion-button>
+        <ion-button @click="toggleSelectAll">
+          {{ allSelected ? 'Deselect all' : 'Select all' }}
+        </ion-button>
+
         <ion-button color="danger" :disabled="selectedIds.length === 0" @click="requestDeleteSelected">
           Delete ({{ selectedIds.length }})
         </ion-button>
@@ -93,10 +93,11 @@
           { text: 'Apply', handler: data => { selectedValueTypes.splice(0, selectedValueTypes.length, ...data); } }
         ]" @didDismiss="showFilterAlert = false" />
 
-      <ion-alert :is-open="showDeleteConfirmAlert" header="Löschen bestätigen"
+
+      <ion-alert :is-open="showDeleteConfirmAlert" header="Confirm deletion"
         :message="`Delete ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'}?`" :buttons="[
-          { text: 'Abbrechen', role: 'cancel', handler: () => (showDeleteConfirmAlert = false) },
-          { text: 'Löschen', role: 'destructive', handler: confirmDeleteSelected }
+          { text: 'Cancel', role: 'cancel', handler: () => (showDeleteConfirmAlert = false) },
+          { text: 'Delete', role: 'destructive', handler: confirmDeleteSelected }
         ]" />
     </ion-content>
 
@@ -146,7 +147,7 @@ import {
   loadBarcodes, filteredBarcodes, scanBarcode, pickFromGallery,
   copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick,
   selectedIds, editMode, toggleEditMode, toggleSelection,
-  selectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
+  allSelected, toggleSelectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
   showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected,
 } from '../logic';
 
