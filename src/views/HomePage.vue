@@ -33,8 +33,7 @@
           <!-- Haupt‑Item -->
           <ion-item button @click="editMode ? toggleSelection(index) : handleBarcodeClick(barcode)">
             <!-- Checkbox im Bearbeitungsmodus -->
-            <ion-checkbox v-if="editMode" slot="start" :checked="selectedIndexes.includes(index)"
-              @click.stop></ion-checkbox>
+            <ion-checkbox v-if="editMode" slot="start" :checked="selectedIndexes.includes(index)"></ion-checkbox>
 
             <ion-label>
               <h2>{{ barcode.displayValue }}</h2>
