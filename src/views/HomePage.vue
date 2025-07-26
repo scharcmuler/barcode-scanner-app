@@ -90,13 +90,34 @@
       </div>
 
       <!-- Alerts -->
-      <ion-alert :is-open="showFilterAlert" header="Filter by type"
-        :inputs="activeValueTypes.map(t => ({ type: 'checkbox', label: t, value: t, checked: selectedValueTypes.includes(t) }))"
-        :buttons="[
-          { text: 'Cancel', role: 'cancel' },
-          { text: 'Apply', handler: data => { selectedValueTypes.splice(0, selectedValueTypes.length, ...data); } }
-        ]" @didDismiss="showFilterAlert = false" />
+      <ion-alert :is-open="showFilterAlert" header="Filter by type" :inputs="activeValueTypes.map(t => ({
+        type: 'checkbox',
+        label: t,
+        value: t,
+        checked: selectedValueTypes.includes(t)
+      }))" :buttons="[
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Apply',
+          handler: data => {
+            if (data.length === 0) {
+              showFilterAlert = true;
+              showFilterValidationAlert = true;
+              return false;
+            } else {
+              selectedValueTypes.splice(0, selectedValueTypes.length, ...data);
+            }
+          }
+        }
+      ]" @didDismiss="showFilterAlert = false" />
 
+      <ion-alert
+        :is-open="showFilterValidationAlert"
+        header="Invalid selection"
+        message="Please select at least one type."
+        :buttons="['OK']"
+        @didDismiss="showFilterValidationAlert = false"
+      />
 
       <ion-alert :is-open="showDeleteConfirmAlert" header="Confirm deletion"
         :message="`Delete ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'}?`" :buttons="[
@@ -156,7 +177,7 @@ import {
   copyToClipboard, shareBarcode, deleteBarcode, handleBarcodeClick,
   selectedIds, editMode, toggleEditMode, toggleSelection,
   allSelected, toggleSelectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
-  showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected, filterActive, showFilterResetAlert,
+  showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected, filterActive, showFilterResetAlert, showFilterValidationAlert,
 } from '../logic';
 
 onMounted(loadBarcodes);

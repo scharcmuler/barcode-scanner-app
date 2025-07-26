@@ -20,6 +20,7 @@ export const selectedIds = ref<string[]>([]);
 export const expandedIds = ref<string[]>([]);
 export const showFilterAlert = ref(false);
 export const showDeleteConfirmAlert = ref(false);
+export const showFilterValidationAlert = ref(false);
 const deletionTriggered = ref(false);
 
 /* ---------------- persistence ---------------- */
