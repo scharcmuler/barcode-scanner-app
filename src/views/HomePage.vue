@@ -6,7 +6,7 @@
         <ion-buttons slot="start">
           <ion-button @click="showFilterAlert = true" v-if="filteredBarcodes.length > 0">
             <ion-label style="margin-right: 5px;">Filter</ion-label>
-            <ion-badge v-if="filterActive" color="danger" slot="end" style="font-size: 10px;">1</ion-badge>
+            <ion-badge v-if="filterActive" color="danger" slot="end" style="font-size: 10px;">{{ selectedValueTypes.length }}</ion-badge>
           </ion-button>
         </ion-buttons>
 
