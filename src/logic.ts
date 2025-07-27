@@ -52,10 +52,12 @@ export async function scanBarcode() {
   try {
     const { camera } = await BarcodeScanner.requestPermissions();
     if (!camera) return;
+
     const { barcodes: result } = await BarcodeScanner.scan({ formats: [] });
+
     if (result.length) {
-      barcodes.value.unshift(createEntry(result[0]));
-      await saveBarcodes();
+      const entry = createEntry(result[0]);
+      addEntryAndUpdateFilter(entry);
     }
   } catch (e) {
     console.error(e);
@@ -66,12 +68,16 @@ export async function pickFromGallery() {
   try {
     const { files } = await FilePicker.pickImages();
     if (!files?.[0]?.path) return;
+
     const { barcodes: detected } = await BarcodeScanner.readBarcodesFromImage({
       path: files[0].path,
       formats: [],
     });
-    detected.forEach((b) => barcodes.value.unshift(createEntry(b)));
-    await saveBarcodes();
+
+    detected.forEach((b) => {
+      const entry = createEntry(b);
+      addEntryAndUpdateFilter(entry);
+    });
   } catch (e) {
     console.error(e);
   }
@@ -150,26 +156,21 @@ export const filterActive = computed(() => {
 });
 
 watch(activeValueTypes, (types) => {
-  // nicht mehr existierende Typen entfernen
   selectedValueTypes.value = selectedValueTypes.value.filter((t) =>
     types.includes(t)
   );
 
-  if (selectedValueTypes.value.length === 0 && types.length > 0) {
-    /* Auto‑Reset nur nach einer Löschaktion anzeigen */
-    if (deletionTriggered.value) {
-      showFilterResetAlert.value = true;
-      deletionTriggered.value = false;
-    }
-    selectedValueTypes.value = [...types]; // alles aktivieren
-  } else {
-    // neue Typen ergänzen
-    types.forEach((t) => {
-      if (!selectedValueTypes.value.includes(t))
-        selectedValueTypes.value.push(t);
-    });
+  if (
+    selectedValueTypes.value.length === 0 &&
+    types.length > 0 &&
+    deletionTriggered.value
+  ) {
+    showFilterResetAlert.value = true;
+    deletionTriggered.value = false;
+    selectedValueTypes.value = [...types];
   }
 });
+
 
 export const filteredBarcodes = computed(() =>
   selectedValueTypes.value.length === 0
@@ -178,3 +179,13 @@ export const filteredBarcodes = computed(() =>
         selectedValueTypes.value.includes(b.valueType)
       )
 );
+
+function addEntryAndUpdateFilter(entry: BarcodeEntry) {
+  barcodes.value.unshift(entry);
+
+  if (!selectedValueTypes.value.includes(entry.valueType)) {
+    selectedValueTypes.value.push(entry.valueType);
+  }
+
+  saveBarcodes();
+}
