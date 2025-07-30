@@ -79,19 +79,6 @@
         <ion-label>No codes scanned.</ion-label>
       </div>
 
-      <div v-if="editMode" class="div-toolbar">
-        <div class="edit-toolbar">
-          <ion-button @click="toggleSelectAll">
-            {{ allSelected ? 'Deselect all' : 'Select all' }}
-          </ion-button>
-
-          <ion-button color="danger" :disabled="selectedIds.length === 0" @click="requestDeleteSelected">
-            Delete ({{ selectedIds.length }})
-          </ion-button>
-        </div>
-
-      </div>
-
       <!-- Alerts -->
       <ion-alert :is-open="showFilterAlert" header="Filter by type" :inputs="activeValueTypes.map(t => ({
         type: 'checkbox',
@@ -133,6 +120,26 @@
         @didDismiss="showFilterResetAlert = false" />
     </ion-content>
 
+    <ion-toast
+      :is-open="showCopiedToast"
+      message="Copied to clipboard"
+      color="success"
+      duration="1500"
+      position="bottom"
+      @didDismiss="showCopiedToast = false"
+    />
+
+    <!-- Fixierte Edit-Toolbar außerhalb vom ion-content -->
+    <div v-if="editMode" class="edit-toolbar-fixed">
+      <ion-button @click="toggleSelectAll">
+        {{ allSelected ? 'Deselect all' : 'Select all' }}
+      </ion-button>
+
+      <ion-button color="danger" :disabled="selectedIds.length === 0" @click="requestDeleteSelected">
+        Delete ({{ selectedIds.length }})
+      </ion-button>
+    </div>
+
     <!-- Footer‑Buttons -->
     <ion-footer>
       <div class="footer">
@@ -156,7 +163,7 @@
 <script setup lang="ts">
 import {
   IonPage, IonHeader, IonToolbar, IonContent, IonList, IonItem, IonItemSliding, IonItemOptions,
-  IonItemOption, IonLabel, IonButton, IonButtons, IonAlert, IonIcon, IonCheckbox, IonBadge,
+  IonItemOption, IonLabel, IonButton, IonButtons, IonAlert, IonIcon, IonCheckbox, IonBadge, IonToast,
 } from '@ionic/vue';
 import { addIcons } from 'ionicons';
 import {
@@ -181,6 +188,7 @@ import {
   selectedIds, editMode, toggleEditMode, toggleSelection,
   allSelected, toggleSelectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
   showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected, filterActive, showFilterResetAlert, showFilterValidationAlert,
+  showCopiedToast, 
 } from '../logic';
 
 onMounted(loadBarcodes);

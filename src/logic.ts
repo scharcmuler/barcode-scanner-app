@@ -1,4 +1,4 @@
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch } from "vue";
 import { BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
 import { Preferences } from "@capacitor/preferences";
 import { Clipboard } from "@capacitor/clipboard";
@@ -28,6 +28,7 @@ const STORAGE_KEY = "barcodes";
 export async function loadBarcodes() {
   const { value } = await Preferences.get({ key: STORAGE_KEY });
   if (value) barcodes.value = JSON.parse(value);
+  selectedValueTypes.value.splice(0, selectedValueTypes.value.length, ...activeValueTypes.value);
 }
 async function saveBarcodes() {
   await Preferences.set({
@@ -84,8 +85,14 @@ export async function pickFromGallery() {
 }
 
 /* ---------------- util actions ---------------- */
-export const copyToClipboard = (text: string) =>
-  Clipboard.write({ string: text });
+
+export const showCopiedToast = ref(false);
+
+export async function copyToClipboard(text: string) {
+  await Clipboard.write({ string: text });
+  showCopiedToast.value = true;
+}
+
 export const shareBarcode = (text: string) =>
   Share.share({ title: "Barcode", text });
 
