@@ -22,9 +22,14 @@ body,
 }
 
 ion-content .edit-toolbar {
-  margin-top: 10px;
   display: flex;
   justify-content: space-evenly;
+}
+
+.div-toolbar {
+  position: absolute;
+  bottom: 20px;
+  width: 100vw;
 }
 
 ion-icon {

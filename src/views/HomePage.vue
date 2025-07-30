@@ -79,14 +79,16 @@
         <ion-label>No codes scanned.</ion-label>
       </div>
 
-      <div v-if="editMode" class="edit-toolbar">
-        <ion-button @click="toggleSelectAll">
-          {{ allSelected ? 'Deselect all' : 'Select all' }}
-        </ion-button>
+      <div class="div-toolbar">
+        <div class="edit-toolbar">
+          <ion-button @click="toggleSelectAll">
+            {{ allSelected ? 'Deselect all' : 'Select all' }}
+          </ion-button>
 
-        <ion-button color="danger" :disabled="selectedIds.length === 0" @click="requestDeleteSelected">
-          Delete ({{ selectedIds.length }})
-        </ion-button>
+          <ion-button color="danger" :disabled="selectedIds.length === 0" @click="requestDeleteSelected">
+            Delete ({{ selectedIds.length }})
+          </ion-button>
+        </div>
       </div>
 
       <!-- Alerts -->
