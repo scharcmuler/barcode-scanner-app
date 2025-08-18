@@ -23,13 +23,22 @@ export const showDeleteConfirmAlert = ref(false);
 export const showFilterValidationAlert = ref(false);
 const deletionTriggered = ref(false);
 
-/* ---------------- persistence ---------------- */
 const STORAGE_KEY = "barcodes";
 export async function loadBarcodes() {
   const { value } = await Preferences.get({ key: STORAGE_KEY });
-  if (value) barcodes.value = JSON.parse(value);
-  selectedValueTypes.value.splice(0, selectedValueTypes.value.length, ...activeValueTypes.value);
+  if (value) {
+    try {
+      const stored = JSON.parse(value);
+      if (Array.isArray(stored) && stored.length > 0) {
+        barcodes.value = stored;
+        return;
+      }
+    } catch {
+    }
+  }
+  await saveBarcodes();
 }
+
 async function saveBarcodes() {
   await Preferences.set({
     key: STORAGE_KEY,
@@ -37,7 +46,6 @@ async function saveBarcodes() {
   });
 }
 
-/* ---------------- barcode creation helpers ---------------- */
 function createEntry(scanned: any): BarcodeEntry {
   return {
     id: crypto.randomUUID(),
@@ -48,14 +56,11 @@ function createEntry(scanned: any): BarcodeEntry {
   };
 }
 
-/* ---------------- scanning ---------------- */
 export async function scanBarcode() {
   try {
     const { camera } = await BarcodeScanner.requestPermissions();
     if (!camera) return;
-
     const { barcodes: result } = await BarcodeScanner.scan({ formats: [] });
-
     if (result.length) {
       const entry = createEntry(result[0]);
       addEntryAndUpdateFilter(entry);
@@ -74,7 +79,6 @@ export async function pickFromGallery() {
       path: files[0].path,
       formats: [],
     });
-
     detected.forEach((b) => {
       const entry = createEntry(b);
       addEntryAndUpdateFilter(entry);
@@ -84,10 +88,7 @@ export async function pickFromGallery() {
   }
 }
 
-/* ---------------- util actions ---------------- */
-
 export const showCopiedToast = ref(false);
-
 export async function copyToClipboard(text: string) {
   await Clipboard.write({ string: text });
   showCopiedToast.value = true;
@@ -99,7 +100,7 @@ export const shareBarcode = (text: string) =>
 export function deleteBarcode(id: string) {
   const idx = barcodes.value.findIndex((b) => b.id === id);
   if (idx !== -1) barcodes.value.splice(idx, 1);
-  deletionTriggered.value = true;
+  deletionTriggered.value = filterActive.value;
   saveBarcodes();
 }
 
@@ -110,11 +111,11 @@ export function handleBarcodeClick(entry: BarcodeEntry) {
     window.open(`tel:${entry.displayValue}`, "_system");
 }
 
-/* ---------------- edit‑mode helpers ---------------- */
 export const toggleEditMode = () => {
   editMode.value = !editMode.value;
   selectedIds.value = [];
 };
+
 export function toggleSelection(id: string) {
   const i = selectedIds.value.indexOf(id);
   i > -1 ? selectedIds.value.splice(i, 1) : selectedIds.value.push(id);
@@ -140,8 +141,8 @@ export async function confirmDeleteSelected() {
   selectedIds.value = [];
   editMode.value = false;
   showDeleteConfirmAlert.value = false;
-  // `deleteBarcode` setzt deletionTriggered, daher hier nichts weiter nötig
 }
+
 export function toggleDetails(id: string) {
   const i = expandedIds.value.indexOf(id);
   i > -1 ? expandedIds.value.splice(i, 1) : expandedIds.value.push(id);
@@ -149,8 +150,6 @@ export function toggleDetails(id: string) {
 
 export const formatDate = (iso?: string) =>
   iso ? new Date(iso).toLocaleString() : "";
-
-/* ---------------- filtering ---------------- */
 export const showFilterResetAlert = ref(false);
 export const activeValueTypes = computed(() =>
   Array.from(new Set(barcodes.value.map((b) => b.valueType)))
@@ -162,22 +161,23 @@ export const filterActive = computed(() => {
   return sel.length > 0 && sel.length < active.length;
 });
 
-watch(activeValueTypes, (types) => {
-  selectedValueTypes.value = selectedValueTypes.value.filter((t) =>
-    types.includes(t)
-  );
-
-  if (
-    selectedValueTypes.value.length === 0 &&
-    types.length > 0 &&
-    deletionTriggered.value
-  ) {
-    showFilterResetAlert.value = true;
-    deletionTriggered.value = false;
-    selectedValueTypes.value = [...types];
-  }
-});
-
+watch(
+  activeValueTypes,
+  (types) => {
+    // rauswerfen, was es nicht mehr gibt
+    selectedValueTypes.value = selectedValueTypes.value.filter((t) =>
+      types.includes(t)
+    );
+    if (selectedValueTypes.value.length === 0 && types.length > 0) {
+      selectedValueTypes.value = [...types];
+      if (deletionTriggered.value) {
+        showFilterResetAlert.value = true;
+        deletionTriggered.value = false;
+      }
+    }
+  },
+  { immediate: true }
+);
 
 export const filteredBarcodes = computed(() =>
   selectedValueTypes.value.length === 0
@@ -193,6 +193,5 @@ function addEntryAndUpdateFilter(entry: BarcodeEntry) {
   if (!selectedValueTypes.value.includes(entry.valueType)) {
     selectedValueTypes.value.push(entry.valueType);
   }
-
   saveBarcodes();
 }

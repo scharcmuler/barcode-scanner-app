@@ -6,12 +6,11 @@
         <ion-buttons slot="start">
           <ion-button @click="showFilterAlert = true" v-if="filteredBarcodes.length > 0">
             <ion-label style="margin-right: 5px;">Filter</ion-label>
-            <ion-badge v-if="filterActive" color="danger" slot="end" style="font-size: 10px;">{{ selectedValueTypes.length }}</ion-badge>
+            <ion-badge v-if="filterActive" color="danger" slot="end" style="font-size: 10px;">{{
+              selectedValueTypes.length }}</ion-badge>
           </ion-button>
         </ion-buttons>
-
         <ion-title class="ion-text-center">ScanManager</ion-title>
-
         <ion-buttons slot="end">
           <ion-button v-if="filteredBarcodes.length > 0" @click="toggleEditMode">
             {{ editMode ? 'Cancel' : 'Edit' }}
@@ -19,25 +18,18 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-
     <ion-content>
-      <!-- Barcode‑Liste -->
       <ion-list v-if="filteredBarcodes.length > 0">
         <ion-item-sliding v-for="barcode in filteredBarcodes" :key="barcode.id" :disabled="editMode">
-          <!-- Slide‑Option links -->
           <ion-item-options side="start">
             <ion-item-option color="danger" expandable @click="deleteBarcode(barcode.id)">
               <ion-icon name="trash-outline" class="option-icon" />
             </ion-item-option>
           </ion-item-options>
-
-          <!-- Haupt‑Item -->
           <ion-item button :detail="false"
             @click="editMode ? toggleSelection(barcode.id) : handleBarcodeClick(barcode)">
-            <!-- Checkbox im Bearbeitungsmodus -->
             <ion-checkbox v-if="editMode" slot="start" :checked="selectedIds.includes(barcode.id)" @click.stop
               @ionChange="toggleSelection(barcode.id)"></ion-checkbox>
-
             <ion-label class="ion-text-wrap">
               <div style="display: flex; flex-direction: column;">
                 <h2>{{ barcode.displayValue }}</h2>
@@ -46,22 +38,18 @@
                 </p>
                 <div v-if="expandedIds.includes(barcode.id)" style="margin-top: 6px;">
                   <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Format: {{ barcode.format
-                    }}</p>
+                  }}</p>
                   <p style="margin-top: 4px; color: var(--ion-color-medium); font-size: 14px;">Type: {{
                     barcode.valueType }}</p>
                 </div>
               </div>
             </ion-label>
-
-            <!-- Info‑Button -->
             <ion-buttons slot="end" v-if="!editMode">
               <ion-button fill="clear" @click.stop="toggleDetails(barcode.id)">
                 <ion-icon name="information-circle-outline" />
               </ion-button>
             </ion-buttons>
           </ion-item>
-
-          <!-- Slide‑Optionen rechts -->
           <ion-item-options side="end">
             <ion-item-option color="success" @click="copyToClipboard(barcode.displayValue)">
               <ion-icon name="copy-outline" class="option-icon" />
@@ -72,14 +60,10 @@
           </ion-item-options>
         </ion-item-sliding>
       </ion-list>
-
-      <!-- Kein Barcode -->
       <div v-else class="no-entry">
         <ion-icon name="close-circle-outline" />
         <ion-label>No codes scanned.</ion-label>
       </div>
-
-      <!-- Alerts -->
       <ion-alert :is-open="showFilterAlert" header="Filter by type" :inputs="activeValueTypes.map(t => ({
         type: 'checkbox',
         label: t,
@@ -101,13 +85,8 @@
         }
       ]" @didDismiss="showFilterAlert = false" />
 
-      <ion-alert
-        :is-open="showFilterValidationAlert"
-        header="Invalid selection"
-        message="Please select at least one type."
-        :buttons="['OK']"
-        @didDismiss="showFilterValidationAlert = false"
-      />
+      <ion-alert :is-open="showFilterValidationAlert" header="Invalid selection"
+        message="Please select at least one type." :buttons="['OK']" @didDismiss="showFilterValidationAlert = false" />
 
       <ion-alert :is-open="showDeleteConfirmAlert" header="Confirm deletion"
         :message="`Delete ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'}?`" :buttons="[
@@ -120,16 +99,9 @@
         @didDismiss="showFilterResetAlert = false" />
     </ion-content>
 
-    <ion-toast
-      :is-open="showCopiedToast"
-      message="Copied to clipboard"
-      color="success"
-      duration="1500"
-      position="bottom"
-      @didDismiss="showCopiedToast = false"
-    />
+    <ion-toast :is-open="showCopiedToast" message="Copied to clipboard" color="success" duration="1500"
+      position="bottom" @didDismiss="showCopiedToast = false" />
 
-    <!-- Fixierte Edit-Toolbar außerhalb vom ion-content -->
     <div v-if="editMode" class="edit-toolbar-fixed">
       <ion-button @click="toggleSelectAll">
         {{ allSelected ? 'Deselect all' : 'Select all' }}
@@ -140,7 +112,6 @@
       </ion-button>
     </div>
 
-    <!-- Footer‑Buttons -->
     <ion-footer>
       <div class="footer">
         <div class="footer-entry" @click="scanBarcode">
@@ -188,9 +159,8 @@ import {
   selectedIds, editMode, toggleEditMode, toggleSelection,
   allSelected, toggleSelectAll, expandedIds, toggleDetails, formatDate, activeValueTypes, selectedValueTypes,
   showFilterAlert, showDeleteConfirmAlert, requestDeleteSelected, confirmDeleteSelected, filterActive, showFilterResetAlert, showFilterValidationAlert,
-  showCopiedToast, 
+  showCopiedToast,
 } from '../logic';
-
 onMounted(loadBarcodes);
 </script>
 
