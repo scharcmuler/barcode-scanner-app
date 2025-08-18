@@ -1,4 +1,3 @@
 Fragen:
-- Wie ist mit Telefonnummern? Welche formate müssen da erkannt werden?
-- Muss man darauf hinweisesn, dass Kamarzugriff abgelehnt wurde?
-- Ist egal, wenn aus der Galerie keine QR-Codes erkannt werden?
+- Was ist für die Präsentaion relevant? Auf was legt er wert?
+- Wann muss man die Präsentation abgeben und darf man dann bis nächste Woche noch was ändern?
