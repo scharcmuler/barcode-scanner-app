@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
       androidSplashResourceName: "splash",
       iosSplashResourceName: "splash",
       showSpinner: false,
-      autoHide: true,
+      launchAutoHide: true,
     }
   }
 };
